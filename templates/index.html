@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenCloud-AI | Operations Center</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl">🌍</span>
+            <h1 class="text-xl font-bold tracking-wide text-emerald-400">GreenCloud-AI</h1>
+            <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> System Active
+            </span>
+        </div>
+        <div class="flex items-center space-x-6 text-sm text-gray-400">
+            <div>Admin User</div>
+            <div>Live Clock: <span id="liveClock" class="font-mono text-gray-200">--:--:--</span></div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full">
+        
+        <!-- Top Metric Cards Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            
+            <!-- Card 1: PUE -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs text-gray-400 font-medium">Current PUE</span>
+                    <span class="text-xs text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded">Optimized</span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="livePue" class="text-3xl font-extrabold text-white">1.14</span>
+                    <span class="text-xs text-gray-500">Target: 1.10</span>
+                </div>
+            </div>
+
+            <!-- Card 2: Active Nodes -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs text-gray-400 font-medium">Active Nodes</span>
+                    <span id="activeLoadPct" class="text-xs text-emerald-400">75% Load</span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="activeNodesText" class="text-3xl font-extrabold text-white">68<span class="text-lg text-gray-500 font-normal">/90</span></span>
+                    <span class="text-xs text-gray-500">22 Deep Sleep</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Power Usage -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs text-gray-400 font-medium">Predicted Power Draw</span>
+                    <span class="text-xs text-amber-400">⚡ Live ML</span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="livePower" class="text-3xl font-extrabold text-white">350.0 <span class="text-lg text-gray-400 font-normal">W</span></span>
+                    <span class="text-xs text-emerald-400">-18% vs avg</span>
+                </div>
+            </div>
+
+            <!-- Card 4: CO2e Savings -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs text-gray-400 font-medium">Carbon Savings</span>
+                    <span class="text-xs text-emerald-400">🌱 Cumulative</span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="liveCarbon" class="text-3xl font-extrabold text-white">4.81 <span class="text-lg text-gray-400 font-normal">Tons</span></span>
+                    <span class="text-xs text-emerald-400">CO2e Reduced</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Column: Predictive Heat Map -->
+            <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Predictive Cluster Heat Map</h2>
+                        <p class="text-xs text-gray-400">Real-time thermal and load monitoring per rack node</p>
+                    </div>
+                    <div class="flex items-center space-x-2 text-xs text-gray-400">
+                        <span class="text-emerald-400 font-medium">AI Stream Active</span>
+                    </div>
+                </div>
+
+                <!-- Server Cluster Grid -->
+                <div class="grid grid-cols-4 gap-3 pt-2">
+                    <div id="card-A1" class="bg-blue-900/40 border border-blue-700/50 p-3 rounded-lg text-center transition-all">
+                        <span class="text-xs font-mono text-gray-300">Node A-1</span>
+                        <div id="node-A1-val" class="mt-2 text-xs font-bold text-blue-400">32°C | 40%</div>
+                    </div>
+                    <div id="card-A2" class="bg-blue-900/40 border border-blue-700/50 p-3 rounded-lg text-center transition-all">
+                        <span class="text-xs font-mono text-gray-300">Node A-2</span>
+                        <div id="node-A2-val" class="mt-2 text-xs font-bold text-blue-400">34°C | 45%</div>
+                    </div>
+                    <div id="card-A3" class="bg-amber-900/40 border border-amber-700/50 p-3 rounded-lg text-center transition-all">
+                        <span class="text-xs font-mono text-gray-300">Node A-3</span>
+                        <div id="node-A3-val" class="mt-2 text-xs font-bold text-amber-400">42°C | 78%</div>
+                    </div>
+                    <div id="card-A4" class="bg-red-900/40 border border-red-700/50 p-3 rounded-lg text-center transition-all">
+                        <span class="text-xs font-mono text-gray-300">Node A-4 (Live AI)</span>
+                        <div id="node-A4-val" class="mt-2 text-xs font-bold text-red-400">--°C | --%</div>
+                    </div>
+
+                    <div id="card-B1" class="bg-blue-900/40 border border-blue-700/50 p-3 rounded-lg text-center">
+                        <span class="text-xs font-mono text-gray-300">Node B-1</span>
+                        <div class="mt-2 text-xs font-bold text-blue-400">30°C | 35%</div>
+                    </div>
+                    <div id="card-B2" class="bg-gray-800/60 border border-gray-700 p-3 rounded-lg text-center opacity-60">
+                        <span class="text-xs font-mono text-gray-400">Node B-2</span>
+                        <div class="mt-2 text-xs font-bold text-gray-500">OFF (Sleep)</div>
+                    </div>
+                    <div id="card-B3" class="bg-amber-900/40 border border-amber-700/50 p-3 rounded-lg text-center">
+                        <span class="text-xs font-mono text-gray-300">Node B-3</span>
+                        <div class="mt-2 text-xs font-bold text-amber-400">44°C | 80%</div>
+                    </div>
+                    <div id="card-B4" class="bg-amber-900/40 border border-amber-700/50 p-3 rounded-lg text-center">
+                        <span class="text-xs font-mono text-gray-300">Node B-4</span>
+                        <div class="mt-2 text-xs font-bold text-amber-400">41°C | 74%</div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 text-xs text-gray-400 pt-2">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500/50 border border-blue-400"></span> Cool / Low Load</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-500/50 border border-amber-400"></span> Moderate</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-red-500/50 border border-red-400"></span> High Temp / Spike</span>
+                </div>
+            </div>
+
+            <!-- Right Column: Automated Action Log -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-semibold text-white">Automated Action Log</h2>
+                        <span class="text-xs text-gray-500">Live Stream</span>
+                    </div>
+                    <div id="actionLog" class="bg-gray-950 rounded-lg p-3 font-mono text-xs text-gray-300 h-64 overflow-y-auto space-y-2.5 border border-gray-800">
+                        <p class="text-emerald-400">[System] Initializing GreenCloud ML Engine stream...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Row: Workload Forecast Chart -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <h2 class="text-lg font-semibold text-white mb-1">Workload Forecasting</h2>
+            <p class="text-xs text-gray-400 mb-4">Historical CPU Utilization vs. AI Predicted Workload</p>
+            <div class="h-64">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Live Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toTimeString().split(' ')[0];
+        }, 1000);
+
+        // Chart.js Setup
+        const ctx = document.getElementById('forecastChart').getContext('2d');
+        const forecastChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['10:00', '11:00', '12:00', '13:00', '14:00', 'Live Stream'],
+                datasets: [
+                    {
+                        label: 'Historical / Live CPU Load (%)',
+                        data: [25, 28, 35, 30, 42, 50],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        grid: { color: '#1f2937' },
+                        ticks: { color: '#9ca3af' },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    },
+                    x: {
+                        grid: { color: '#1f2937' },
+                        ticks: { color: '#9ca3af' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#e5e7eb' } }
+                }
+            }
+        });
+
+        // Live Prediction Fetch Loop
+        async function fetchAIPrediction(cpu, ram) {
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cpu_load: cpu, ram_usage: ram })
+                });
+                const result = await response.json();
+                
+                // 1. Update Power Metric Card
+                document.getElementById('livePower').innerHTML = 
+                    `${result.predicted_power_watts} <span class="text-lg text-gray-400 font-normal">W</span>`;
+
+                // 2. Update Node A-4 Heat Map Box
+                const nodeA4Val = document.getElementById('node-A4-val');
+                const cardA4 = document.getElementById('card-A4');
+                nodeA4Val.innerText = `${result.predicted_temp_c}°C | ${cpu}%`;
+
+                if (cpu > 80) {
+                    cardA4.className = "bg-red-900/40 border border-red-700/50 p-3 rounded-lg text-center transition-all";
+                    nodeA4Val.className = "mt-2 text-xs font-bold text-red-400";
+                } else if (cpu > 45) {
+                    cardA4.className = "bg-amber-900/40 border border-amber-700/50 p-3 rounded-lg text-center transition-all";
+                    nodeA4Val.className = "mt-2 text-xs font-bold text-amber-400";
+                } else {
+                    cardA4.className = "bg-blue-900/40 border border-blue-700/50 p-3 rounded-lg text-center transition-all";
+                    nodeA4Val.className = "mt-2 text-xs font-bold text-blue-400";
+                }
+
+                // 3. Append to Automated Action Log
+                const logBox = document.getElementById('actionLog');
+                const timeNow = new Date().toTimeString().split(' ')[0];
+                let logColor = "text-emerald-400";
+                if (result.decision === "TRIGGER_VM_MIGRATION") logColor = "text-red-400";
+                if (result.decision === "INITIATE_DEEP_SLEEP") logColor = "text-blue-400";
+
+                const newLog = `<p class="${logColor}">[${timeNow}] Node A-4 Load: ${cpu}% -> Decision: ${result.decision} (${result.predicted_power_watts}W)</p>`;
+                logBox.innerHTML = newLog + logBox.innerHTML;
+
+                // 4. Push Live Data to Chart
+                forecastChart.data.datasets[0].data.shift();
+                forecastChart.data.datasets[0].data.push(cpu);
+                forecastChart.update();
+
+            } catch (err) {
+                console.error("Error fetching AI prediction:", err);
+            }
+        }
+
+        // Trigger AI Stream every 4 seconds with simulated dynamic telemetry
+        setInterval(() => {
+            let cpu = Math.floor(Math.random() * (95 - 15 + 1) + 15);
+            let ram = Math.floor(Math.random() * (90 - 20 + 1) + 20);
+            fetchAIPrediction(cpu, ram);
+        }, 4000);
+    </script>
+</body>
+</html>
